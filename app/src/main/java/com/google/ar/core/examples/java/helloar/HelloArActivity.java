@@ -64,9 +64,11 @@ import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -190,30 +192,54 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
 
   }
     public void onResolveButtonPress() {
-      /*  for (ColoredAnchor coloredAnchor : anchors) {
-            if (coloredAnchor.anchor.getTrackingState() != TrackingState.TRACKING) {
-                continue;
-            }
-            if(coloredAnchor.appAnchorState ==  ColoredAnchor.AppAnchorState.RESOLVING)
-                return;
-           onRoomCodeEntered(coloredAnchor);
-        }*/
-      /*list of short codes that need to be passed*/
+
        int shortCode = 123;
+        String AnchorId="";
+        File file = new File(path+ fileName);
+        FileReader fileReader = null;
+        try {
+            fileReader = new FileReader(file);
 
+        BufferedReader bufferedReader = new BufferedReader(fileReader);
+        StringBuffer stringBuffer = new StringBuffer();
+        String line;
+        while ((line = bufferedReader.readLine()) != null) {
+            //stringBuffer.append(line);
+            //AnchorId = storageManager.getCloudAnchorID(this, Integer.parseInt(line));
+            int shortcode=Integer.parseInt(line);
+            storageManager.getCloudAnchorId(shortCode,cloudAnchorId -> {
+                if(cloudAnchorId!=null) {
+                    Anchor resolvedAnchor = session.resolveCloudAnchor(cloudAnchorId);
+                    float[] objColor = new float[]{66.0f, 133.0f, 244.0f, 255.0f};
 
-        String cloudAnchorId = storageManager.getCloudAnchorID(this, shortCode);
+                    anchors.add(new ColoredAnchor(resolvedAnchor, objColor, ColoredAnchor.AppAnchorState.RESOLVING));
+                    Toast.makeText(getApplicationContext(), "Now resolving anchor..", Toast.LENGTH_SHORT).show();
+                }
+            });
+            //
+            //Log.e(TAG,"indu string "+line+cloudAnchorId);
+        }
 
+        fileReader.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        //String cloudAnchorId = storageManager.getCloudAnchorID(this, shortCode);
+      /* if(!cloudAnchorId.equals("")){
+            Log.e(TAG,"indu cloud resolving"+cloudAnchorId);
             Anchor resolvedAnchor = session.resolveCloudAnchor(cloudAnchorId);
         float[] objColor =new float[] {66.0f, 133.0f, 244.0f, 255.0f};
 
             anchors.add(new ColoredAnchor(resolvedAnchor,objColor,ColoredAnchor.AppAnchorState.RESOLVING));
             //setNewAnchor(resolvedAnchor);
-        Toast.makeText(getApplicationContext(),"Now resolving anchor..", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getApplicationContext(),"Now resolving anchor..", Toast.LENGTH_SHORT).show();*/
             //appAnchorState = ColoredAnchor.AppAnchorState.RESOLVING;
+       }
 
 
-    }
+
 
 
     private float[] getAnchorColor(Anchor.CloudAnchorState state) {
@@ -576,13 +602,13 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
                   //        this, "Anchor hosted successfully! Cloud Short Code: " + shortCode);
                   String toastMsg = "Anchor hosted successfully! Cloud Short Code: "+ shortCode;
                   shorties.add(shortCode.toString());
-                  savetofile();
+                  savetofile(shortCode.toString());
                   Toast.makeText(getApplicationContext(),toastMsg , Toast.LENGTH_SHORT).show();
                   Log.e(TAG, toastMsg);
               });
   }
 
-    private void savetofile() {
+    private void savetofile(String data) {
         try {
             Log.e(TAG,"indu path"+path);
             new File(path).mkdir();
@@ -591,9 +617,9 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
                 file.createNewFile();
             }
             FileOutputStream fileOutputStream = new FileOutputStream(file,true);
-            for (String s : shorties) {
-                fileOutputStream.write((s + System.getProperty("line.separator")).getBytes());
-            }
+
+            fileOutputStream.write((data + System.getProperty("line.separator")).getBytes());
+
         }  catch(FileNotFoundException ex) {
             Log.d(TAG, ex.getMessage());
         }  catch(IOException ex) {
