@@ -88,7 +88,7 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
 
   // Rendering. The Renderers are created here, and initialized when the GL surface is created.
   private GLSurfaceView surfaceView;
-
+private static int count=0;
   private boolean installRequested;
   private Button resolveButton;
   private Session session;
@@ -447,6 +447,7 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
   @Override
   public void onDrawFrame(GL10 gl) {
     // Clear screen to notify driver it should not load any pixels from previous frame.
+     // onResolveButtonPress();
     GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
     if (session == null) {
@@ -464,7 +465,11 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
       // camera framerate.
       Frame frame = session.update();
       Camera camera = frame.getCamera();
-
+      count++;
+      if(count>100){
+          resolving_anchors();
+          count=0;
+      }
       // Handle one tap per frame.
       handleTap(frame, camera);
         //camera.getProjectionMatrix();
@@ -595,7 +600,11 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
     }
   }
 
-  private void storeAnchorIdToDB(ColoredAnchor coloredAnchor) {
+    private void resolving_anchors() {
+      onResolveButtonPress();
+    }
+
+    private void storeAnchorIdToDB(ColoredAnchor coloredAnchor) {
       storageManager.nextShortCode(
               (shortCode) -> {
                   if (shortCode == null) {
