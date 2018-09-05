@@ -193,10 +193,28 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
   }
     public void onResolveButtonPress() {
 
-       int shortCode = 123;
-        String AnchorId="";
+        ArrayList<String> data=storageManager.getAllShortCodes(anchorcodes -> {
+            ArrayList<String> code=anchorcodes;
+            Log.e(TAG,"indu code"+code);
+            for(String shorty : code){
+                int shortcode=Integer.parseInt(shorty);
+            storageManager.getCloudAnchorId(shortcode,cloudAnchorId -> {
+                if(cloudAnchorId!=null) {
+                    Log.e(TAG,"indu string "+shortcode+cloudAnchorId);
+                    Anchor resolvedAnchor = session.resolveCloudAnchor(cloudAnchorId);
+                    float[] objColor = new float[]{66.0f, 133.0f, 244.0f, 255.0f};
+
+                    anchors.add(new ColoredAnchor(resolvedAnchor, objColor, ColoredAnchor.AppAnchorState.RESOLVING));
+                    Toast.makeText(getApplicationContext(), "Now resolving anchor..", Toast.LENGTH_SHORT).show();
+                }
+            });}
+        });
+
+        /*String AnchorId="";
         File file = new File(path+ fileName);
+
         FileReader fileReader = null;
+
         try {
             fileReader = new FileReader(file);
 
@@ -207,8 +225,9 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
             //stringBuffer.append(line);
             //AnchorId = storageManager.getCloudAnchorID(this, Integer.parseInt(line));
             int shortcode=Integer.parseInt(line);
-            storageManager.getCloudAnchorId(shortCode,cloudAnchorId -> {
+            storageManager.getCloudAnchorId(shortcode,cloudAnchorId -> {
                 if(cloudAnchorId!=null) {
+                    Log.e(TAG,"indu string "+shortcode+cloudAnchorId);
                     Anchor resolvedAnchor = session.resolveCloudAnchor(cloudAnchorId);
                     float[] objColor = new float[]{66.0f, 133.0f, 244.0f, 255.0f};
 
@@ -225,21 +244,8 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
-        }
-        //String cloudAnchorId = storageManager.getCloudAnchorID(this, shortCode);
-      /* if(!cloudAnchorId.equals("")){
-            Log.e(TAG,"indu cloud resolving"+cloudAnchorId);
-            Anchor resolvedAnchor = session.resolveCloudAnchor(cloudAnchorId);
-        float[] objColor =new float[] {66.0f, 133.0f, 244.0f, 255.0f};
-
-            anchors.add(new ColoredAnchor(resolvedAnchor,objColor,ColoredAnchor.AppAnchorState.RESOLVING));
-            //setNewAnchor(resolvedAnchor);
-        Toast.makeText(getApplicationContext(),"Now resolving anchor..", Toast.LENGTH_SHORT).show();*/
-            //appAnchorState = ColoredAnchor.AppAnchorState.RESOLVING;
+        }*/
        }
-
-
-
 
 
     private float[] getAnchorColor(Anchor.CloudAnchorState state) {
@@ -262,15 +268,16 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
       dialog.setContentView(R.layout.dialogbox);
       dialog.setTitle("Anchor hosting states..");
       TextView text = dialog.findViewById(R.id.label);
-      storageManager.getAllShortCodes(
+     // storageManager.getAllShortCodes(anchorcodes -> Log.e("indu shortcodes:",anchorcodes));
+      /*storageManager.getAllShortCodes(
               (shortCodes) -> {
                   if (shortCodes != null) {
                       StringBuilder builder = new StringBuilder();
-                      Log.e("vaiii:",shortCodes);
+                      Log.e("indu shortcodes:",shortCodes);
                       text.setText(shortCodes);
                   }
               }
-      );
+      );*/
 
       if (anchors.size() > 0) {
           ArrayList<String> anchorsArray =new ArrayList<>();
@@ -730,15 +737,6 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
             }
         }
         return nearestAnchorId+":"+nearestAnchorDistance;
-    }
-
-    /**
-     * Callback function that is invoked when the OK button in the resolve dialog is pressed.
-     *
-     * @param dialogValue The value entered in the resolve dialog.
-     */
-    private void onResolveOkPressed(String dialogValue) {
-
     }
 
 }

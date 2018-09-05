@@ -27,6 +27,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.MutableData;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
 
@@ -47,7 +48,7 @@ public class StorageManager {
 
     /** Listener for getting all short codes from firebase DB */
     interface GetShortCodesListener {
-        void onAllShortCodesAvailable(String anchorcodes);
+        void onAllShortCodesAvailable(ArrayList<String> anchorcodes);
     }
   private static final String TAG = StorageManager.class.getName();
   private static final String KEY_ROOT_DIR = "shared_anchor_codelab_root_helloAR_app";
@@ -140,9 +141,38 @@ public class StorageManager {
     /**
      * Retrieves all the stored short codes. Return null if failed or cancelled.
      **/
-    void getAllShortCodes(GetShortCodesListener listener) {
-        Log.e("APEKS:","Inside getAllSHorCO");
-        rootRef
+    ArrayList<String> getAllShortCodes(GetShortCodesListener listener){
+
+        Log.e("indu:","Inside getAllSHorCO");
+        DatabaseReference database = FirebaseDatabase.getInstance().getReference();
+        DatabaseReference ref = database.child(KEY_ROOT_DIR);
+        final ArrayList<String> shortcode = new ArrayList<String>();
+        Query itemsQuery = ref.orderByChild("type");
+        itemsQuery.addValueEventListener(new ValueEventListener() {
+           @Override
+           public void onDataChange(DataSnapshot dataSnapshot) {
+           Log.e("indu:","ondatachange");
+           if (dataSnapshot.exists()) {
+                for (DataSnapshot singleSnapshot : dataSnapshot.getChildren()) {
+                   if (singleSnapshot.getValue().toString().length() > 6){
+                       shortcode.add(singleSnapshot.getKey().substring(7));
+                     Log.e("indu:","add item"+singleSnapshot.getKey().substring(7));
+                     }
+
+                 }
+                listener.onAllShortCodesAvailable(shortcode);
+                }
+            }
+            @Override
+             public void onCancelled(DatabaseError databaseError) {
+
+            }
+
+        });
+        return shortcode;
+    }
+/*vaibhav*/
+        /*rootRef
                 .child(KEY_ROOT_DIR)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -168,6 +198,6 @@ public class StorageManager {
                                 databaseError.toException());
                         listener.onAllShortCodesAvailable(null);
                     }
-                });
-    }
+                });*/
+    //}
 }
