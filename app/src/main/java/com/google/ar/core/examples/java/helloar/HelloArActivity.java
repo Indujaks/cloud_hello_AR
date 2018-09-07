@@ -96,7 +96,7 @@ private static int count=0;
   private DisplayRotationHelper displayRotationHelper;
   private TapHelper tapHelper;
   private TextView textView;
-
+    HashMap<String,Anchor.CloudAnchorState> codes_hm=new HashMap<String, Anchor.CloudAnchorState>();
   private final BackgroundRenderer backgroundRenderer = new BackgroundRenderer();
   private final ObjectRenderer virtualObject = new ObjectRenderer();
   private final ObjectRenderer virtualObjectShadow = new ObjectRenderer();
@@ -118,6 +118,7 @@ private static int count=0;
     private final float[] modelMatrix = new float[16];
     private final float[] modelViewMatrix = new float[16];
     private final float[] modelViewProjectionMatrix = new float[16];
+    private static boolean flag=false;
 
     // Anchors created from taps used for object placing with a given color.
 
@@ -192,6 +193,7 @@ private static int count=0;
 
   }
     public void onResolveButtonPress() {
+        flag=true;
 
         ArrayList<String> data=storageManager.getAllShortCodes(anchorcodes -> {
             ArrayList<String> code=anchorcodes;
@@ -203,7 +205,12 @@ private static int count=0;
                     Log.e(TAG,"indu string "+shortcode+cloudAnchorId);
                     Anchor resolvedAnchor = session.resolveCloudAnchor(cloudAnchorId);
                     float[] objColor = new float[]{66.0f, 133.0f, 244.0f, 255.0f};
-
+                   // if(resolvedAnchor.getCloudAnchorState() == Anchor.CloudAnchorState.SUCCESS){
+                        Log.e(TAG,"indu cloudanchor state "+resolvedAnchor.getCloudAnchorState());
+                        codes_hm.put(resolvedAnchor.getCloudAnchorId(),resolvedAnchor.getCloudAnchorState());
+                    //}else{
+                      //  codes_hm.put(shorty,0);
+                    //}
                     anchors.add(new ColoredAnchor(resolvedAnchor, objColor, ColoredAnchor.AppAnchorState.RESOLVING));
                     Toast.makeText(getApplicationContext(), "Now resolving anchor..", Toast.LENGTH_SHORT).show();
                 }
@@ -466,7 +473,7 @@ private static int count=0;
       Frame frame = session.update();
       Camera camera = frame.getCamera();
       count++;
-      if(count>100){
+      if(count>300){
           resolving_anchors();
           count=0;
       }
@@ -601,7 +608,51 @@ private static int count=0;
   }
 
     private void resolving_anchors() {
-      onResolveButtonPress();
+        Log.e(TAG,"indu resolving _anchors");
+
+      if(flag) {
+Log.e(TAG,"indu flag is true");
+          updateanchorstate();
+          ArrayList<String> data=storageManager.getAllShortCodes(anchorcodes -> {
+              ArrayList<String> code=anchorcodes;
+              Log.e(TAG,"indu code"+code);
+              for(String shorty : code){
+                  int shortcode=Integer.parseInt(shorty);
+                  storageManager.getCloudAnchorId(shortcode,cloudAnchorId -> {
+                      if(cloudAnchorId!=null) {
+
+                          Log.e(TAG,"indu shorty "+shortcode+cloudAnchorId);
+                          Log.e(TAG,"indu cloud id"+cloudAnchorId+" \t state"+ codes_hm.get(cloudAnchorId));
+                          if(codes_hm.containsKey(cloudAnchorId)&& codes_hm.get(cloudAnchorId) != Anchor.CloudAnchorState.SUCCESS  ) {
+                              Anchor resolvedAnchor = session.resolveCloudAnchor(cloudAnchorId);
+                              float[] objColor = new float[]{66.0f, 133.0f, 244.0f, 255.0f};
+
+                              anchors.add(new ColoredAnchor(resolvedAnchor, objColor, ColoredAnchor.AppAnchorState.RESOLVING));
+                              Toast.makeText(getApplicationContext(), "Now resolving anchor..", Toast.LENGTH_SHORT).show();
+                          }
+                      }
+                  });}
+          });
+      }
+
+    }
+
+    private void updateanchorstate() {
+      Log.e(TAG,"indu updateanchorstate");
+        for(HashMap.Entry<String,Anchor.CloudAnchorState> hm:codes_hm.entrySet()){
+            if(hm.getValue()!= Anchor.CloudAnchorState.SUCCESS){
+                for(ColoredAnchor canchor:anchors){
+                    //if(canchor.anchor.getCloudAnchorState()  == Anchor.CloudAnchorState.SUCCESS){
+                        if(canchor.anchor.getCloudAnchorId().equals(hm.getKey())){
+                            Log.e(TAG,"indu setting anchor status" +canchor.anchor.getCloudAnchorState());
+                            hm.setValue(canchor.anchor.getCloudAnchorState());
+                        }
+                   // }
+                }
+
+            }
+
+        }
     }
 
     private void storeAnchorIdToDB(ColoredAnchor coloredAnchor) {
